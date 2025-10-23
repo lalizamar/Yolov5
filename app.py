@@ -146,25 +146,25 @@ with main_container:
                 st.subheader(f"✨ ¡ÉXITO! {ghosts_detected} Espectros Encontrados")
                 st.balloons() # Animación de celebración
                 st.success(f"¡Has capturado {ghosts_detected} presencias espectrales! ¡Están por todas partes!")
+
+                # Tabla resumida de la simulación
+                summary_data = [{"Categoría Espectral": name, "Cantidad": count} for name, count in category_count.items()]
+                df_summary = pd.DataFrame(summary_data)
+                
+                st.dataframe(df_summary, use_container_width=True, hide_index=True)
+                
+                # Gráfico de barras de fantasmas
+                st.subheader("Gráfico de Apariciones")
+                st.bar_chart(df_summary.set_index('Categoría Espectral')['Cantidad'])
+                
+                # Mensaje de Confianza simulada (para mantener la estructura del informe)
+                st.caption(f"Confianza simulada del rastreo: {random.uniform(0.70, 0.99):.2f}")
             else:
                 st.subheader("🌫️ Zona Despejada")
                 st.info("No se detectaron fantasmas con esta sensibilidad. ¡Intenta en un lugar más espeluznante o ajusta los umbrales!")
 
-            # Tabla resumida de la simulación
-            summary_data = [{"Categoría Espectral": name, "Cantidad": count} for name, count in category_count.items()]
-            df_summary = pd.DataFrame(summary_data)
-            
-            st.dataframe(df_summary, use_container_width=True, hide_index=True)
-            
-            # Gráfico de barras de fantasmas
-            st.subheader("Gráfico de Apariciones")
-            st.bar_chart(df_summary.set_index('Categoría Espectral')['Cantidad'])
-            
-            # Mensaje de Confianza simulada (para mantener la estructura del informe)
-            st.caption(f"Confianza simulada del rastreo: {random.uniform(0.70, 0.99):.2f}")
-
-else:
-    st.info("Apunta tu cámara a tu entorno y presiona 'Tomar foto' para comenzar la caza de fantasmas.")
+    else: # Este 'else' está asociado con 'if picture:'
+        st.info("Apunta tu cámara a tu entorno y presiona 'Tomar foto' para comenzar la caza de fantasmas.")
 
 
 # Información adicional y pie de página
