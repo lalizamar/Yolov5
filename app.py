@@ -1,4 +1,4 @@
-}import streamlit as st
+import streamlit as st
 import random
 import pandas as pd
 import time # Añadimos time para simular el proceso de "rastreo"
@@ -66,10 +66,6 @@ def inject_cute_halloween_css():
                 transform: translateY(2px);
             }}
 
-            /* Sidebar */
-            /* Eliminamos los selectores específicos de Streamlit para la barra lateral 
-               ya que no se usa en la versión simplificada */
-
             /* Dataframe y Cajas de Información */
             .stDataFrame, .stAlert, .stInfo, .stWarning, .stSuccess {{
                 border-radius: 10px;
@@ -106,8 +102,6 @@ st.markdown(f"""
 
 
 # --- 5. Lógica Principal de Simulación de Detección ---
-# No necesitamos cargar el modelo. La aplicación está lista inmediatamente.
-
 # Contenedor principal para la cámara y resultados
 main_container = st.container()
 
