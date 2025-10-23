@@ -1,27 +1,23 @@
-import cv2
-import streamlit as st
-import numpy as np
+}import streamlit as st
+import random
 import pandas as pd
-import torch
-import os
-import sys
+import time # Añadimos time para simular el proceso de "rastreo"
 
 # --- 1. Mapeo Creativo de Clases YOLO a Fantasmas Tiernos ---
-# Usamos algunas clases comunes del conjunto COCO de YOLOv5 para simular fantasmas.
-# COCO Classes (Index: Name): 0: person, 16: cat, 17: dog, 39: bottle, 64: mouse, 67: cell phone, etc.
-GHOST_MAPPING = {
-    0: "Fantasma Vagabundo (Persona)", # Person
-    16: "Minino Espectral (Gato)",    # Cat
-    17: "Can Espectral (Perro)",      # Dog
-    39: "Poción Olvidada (Botella)",  # Bottle
-    67: "Grimorio Moderno (Móvil)",   # Cell phone
-    # Todas las demás se mapearán a Fantasma Genérico
-}
-DEFAULT_GHOST = "Espectro Desconocido"
-
-def get_ghost_name(class_index):
-    """Devuelve el nombre temático del 'fantasma' basado en el índice de la clase original."""
-    return GHOST_MAPPING.get(class_index, DEFAULT_GHOST)
+# Usamos una lista de "fantasmas" que serán detectados aleatoriamente.
+GHOST_LIST = [
+    "Fantasma Vagabundo", 
+    "Minino Espectral",
+    "Can Espectral",
+    "Poción Olvidada",
+    "Grimorio Moderno",
+    "Espectro Glotón",
+    "Mochila Flotante",
+    "Zapato Volador",
+    "Calcetín Desaparecido",
+    "Brujita Novata",
+    "Momia Amigable"
+]
 
 # --- 2. Inyección de CSS para la Estética "Cute Halloween" ---
 def inject_cute_halloween_css():
@@ -71,10 +67,8 @@ def inject_cute_halloween_css():
             }}
 
             /* Sidebar */
-            .css-1d391kg {{ /* Selector genérico de sidebar */
-                background-color: var(--color-secondary);
-                border-right: 5px solid var(--color-primary);
-            }}
+            /* Eliminamos los selectores específicos de Streamlit para la barra lateral 
+               ya que no se usa en la versión simplificada */
 
             /* Dataframe y Cajas de Información */
             .stDataFrame, .stAlert, .stInfo, .stWarning, .stSuccess {{
@@ -95,27 +89,6 @@ st.set_page_config(
 
 inject_cute_halloween_css()
 
-# Función para cargar el modelo YOLOv5
-@st.cache_resource
-def load_yolov5_model(model_path='yolov5s.pt'):
-    try:
-        # Importar yolov5
-        import yolov5
-        
-        # Intentar cargar el modelo YOLOv5 (generalmente carga el modelo COCO)
-        model = yolov5.load(model_path, weights_only=False)
-        return model
-    
-    except Exception as e:
-        st.error(f"❌ Error al cargar el espectrómetro de visión (modelo YOLOv5): {str(e)}")
-        st.info("""
-        Recomendaciones:
-        1. Asegúrate de tener las librerías PyTorch y YOLOv5 instaladas y compatibles.
-           Por ejemplo: `pip install torch==1.12.0 torchvision==0.13.0 yolov5==7.0.9`
-        2. El sistema intentará descargar 'yolov5s.pt' si no se encuentra localmente.
-        """)
-        return None
-
 # --- 4. Título y Narrativa (Parte Creativa) ---
 st.title("👻 Caza Fantasmas 'Cute' (Ghostly Glimpse)")
 st.markdown(f"""
@@ -124,142 +97,85 @@ st.markdown(f"""
         ¡Bienvenido, Cazador de Espectros! 🍬
     </h3>
     <p style='font-family: "Julee", cursive; color: white; margin-bottom: 0;'>
-        Esta interfaz transforma tu cámara en un espectrómetro de visión artificial, utilizando el poderoso algoritmo YOLO (You Only Look Once) para detectar 
-        presencias espectrales (¡es decir, objetos comunes de tu entorno!) y nombrarlas con nuestra estética de Halloween Tierno. 
-        Prepárate para capturar los más adorables y traviesos fantasmas de tu casa.
+        Esta interfaz transforma tu cámara en un **simulador de espectrómetro de visión artificial** para detectar 
+        presencias espectrales (¡fantasmas tiernos!). Al tomar una foto, nuestro "algoritmo simplificado" 
+        simulará la captura de los más adorables y traviesos fantasmas de tu casa.
     </p>
 </div>
 """, unsafe_allow_html=True)
 
 
-# Cargar el modelo
-with st.spinner("Activando el Espectrómetro de Visión (Cargando YOLOv5)..."):
-    model = load_yolov5_model()
+# --- 5. Lógica Principal de Simulación de Detección ---
+# No necesitamos cargar el modelo. La aplicación está lista inmediatamente.
 
-# Si el modelo se cargó correctamente, configuramos los parámetros
-if model:
-    # Sidebar para los parámetros de configuración
-    st.sidebar.title("Ajustes Espectrales")
+# Contenedor principal para la cámara y resultados
+main_container = st.container()
+
+with main_container:
+    # Capturar foto con la cámara
+    picture = st.camera_input("📸 Busca un fantasma y presiona el botón para capturar la imagen", key="camera")
     
-    # Ajustar parámetros del modelo
-    with st.sidebar:
-        st.subheader('Sensibilidad de Detección')
-        model.conf = st.slider('Umbral de Confianza Espectral', 0.0, 1.0, 0.25, 0.01)
-        model.iou = st.slider('Umbral de Solapamiento (IoU)', 0.0, 1.0, 0.45, 0.01)
-        st.caption(f"Confianza: {model.conf:.2f} | IoU: {model.iou:.2f}")
+    if picture:
+        # Simular el proceso de "detección"
+        with st.spinner("Rastreando firmas espectrales..."):
+            time.sleep(2) # Espera para simular el procesamiento
         
-        # Opciones adicionales
-        st.subheader('Filtros Avanzados')
-        try:
-            model.agnostic = st.checkbox('Ignorar Clasificación (Agnostic NMS)', False)
-            model.multi_label = st.checkbox('Permitir Múltiples Detecciones por Caja', False)
-            model.max_det = st.number_input('Máximo de Espectros a Capturar', 10, 2000, 1000, 10)
-        except:
-            st.warning("Algunas opciones avanzadas no están disponibles con esta configuración")
-    
-    # Contenedor principal para la cámara y resultados
-    main_container = st.container()
-    
-    with main_container:
-        # Capturar foto con la cámara
-        picture = st.camera_input("📸 Busca un fantasma y presiona el botón para capturar la imagen", key="camera")
+        # --- SIMULACIÓN DE RESULTADOS ---
+        # Decidimos cuántos fantasmas "detectar" (entre 1 y 5)
+        num_ghosts = random.randint(1, 5)
         
-        if picture:
-            # Procesar la imagen capturada
-            bytes_data = picture.getvalue()
-            cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+        # Elegimos esos fantasmas aleatoriamente de la lista
+        simulated_detections = random.choices(GHOST_LIST, k=num_ghosts)
+        
+        # Procesar los resultados simulados para el DataFrame
+        category_count = {}
+        for ghost in simulated_detections:
+            category_count[ghost] = category_count.get(ghost, 0) + 1
+        
+        ghosts_detected = len(simulated_detections)
+
+        # Mostrar resultados
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("🖼️ Escena Espectral Capturada")
+            # En esta versión simplificada, solo mostramos la imagen capturada (sin cajas dibujadas)
+            st.image(picture, caption="Foto capturada", use_container_width=True)
+            st.markdown(f"""
+                <div style='text-align: center; color: var(--color-text); border: 2px dashed var(--color-primary); border-radius: 5px; padding: 10px;'>
+                    **Nota de Simulación:** El algoritmo simplificado ha analizado esta escena.
+                </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            if ghosts_detected > 0:
+                st.subheader(f"✨ ¡ÉXITO! {ghosts_detected} Espectros Encontrados")
+                st.balloons() # Animación de celebración
+                st.success(f"¡Has capturado {ghosts_detected} presencias espectrales! ¡Están por todas partes!")
+            else:
+                st.subheader("🌫️ Zona Despejada")
+                st.info("No se detectaron fantasmas con esta sensibilidad. ¡Intenta en un lugar más espeluznante o ajusta los umbrales!")
+
+            # Tabla resumida de la simulación
+            summary_data = [{"Categoría Espectral": name, "Cantidad": count} for name, count in category_count.items()]
+            df_summary = pd.DataFrame(summary_data)
             
-            # Realizar la detección
-            with st.spinner("Rastreando firmas espectrales..."):
-                try:
-                    results = model(cv2_img)
-                except Exception as e:
-                    st.error(f"Error durante el rastreo espectral: {str(e)}")
-                    st.stop()
+            st.dataframe(df_summary, use_container_width=True, hide_index=True)
             
-            # Parsear resultados
-            try:
-                predictions = results.pred[0]
-                boxes = predictions[:, :4]
-                scores = predictions[:, 4]
-                categories = predictions[:, 5]
-                
-                # --- LÓGICA DE DETECCIÓN DE FANTASMAS ---
-                ghosts_detected = categories.shape[0] > 0
-                
-                # Mostrar resultados
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.subheader("🖼️ Escena Espectral Capturada")
-                    # Renderizar las detecciones
-                    results.render()
-                    # Mostrar imagen con las detecciones
-                    st.image(cv2_img, channels='BGR', use_container_width=True)
-                
-                with col2:
-                    if ghosts_detected:
-                        st.subheader(f"✨ ¡ÉXITO! {ghosts_detected} Espectros Encontrados")
-                        st.balloons() # Animación de celebración
-                        st.success(f"¡Has capturado {ghosts_detected} presencias espectrales! ¡Están por todas partes!")
-                    else:
-                        st.subheader("🌫️ Zona Despejada")
-                        st.info("No se detectaron fantasmas con esta sensibilidad. ¡Intenta en un lugar más espeluznante o ajusta los umbrales!")
+            # Gráfico de barras de fantasmas
+            st.subheader("Gráfico de Apariciones")
+            st.bar_chart(df_summary.set_index('Categoría Espectral')['Cantidad'])
+            
+            # Mensaje de Confianza simulada (para mantener la estructura del informe)
+            st.caption(f"Confianza simulada del rastreo: {random.uniform(0.70, 0.99):.2f}")
 
-                    # Obtener nombres de etiquetas y aplicar el mapeo temático
-                    category_count = {}
-                    detailed_data = []
-
-                    for i, category_tensor in enumerate(categories):
-                        category_idx = int(category_tensor.item()) if hasattr(category_tensor, 'item') else int(category_tensor)
-                        
-                        # Aplicar mapeo de fantasma
-                        ghost_label = get_ghost_name(category_idx)
-                        
-                        # Contar por el nombre del fantasma
-                        if ghost_label in category_count:
-                            category_count[ghost_label] += 1
-                        else:
-                            category_count[ghost_label] = 1
-
-                        # Preparar datos detallados
-                        confidence = scores[i].item()
-                        x_min, y_min, x_max, y_max = boxes[i][:4].cpu().numpy().astype(int)
-                        
-                        detailed_data.append({
-                            "Fantasma Detectado": ghost_label,
-                            "Confianza (%)": f"{confidence * 100:.1f}%",
-                            "Clase Original (YOLO)": model.names[category_idx],
-                            "Ubicación (Px)": f"({x_min},{y_min}) - ({x_max},{y_max})"
-                        })
-                    
-                    if detailed_data:
-                        df = pd.DataFrame(detailed_data)
-                        
-                        # Tabla resumida
-                        summary_data = [{"Categoría Espectral": name, "Cantidad": count} for name, count in category_count.items()]
-                        df_summary = pd.DataFrame(summary_data)
-                        st.dataframe(df_summary, use_container_width=True, hide_index=True)
-                        
-                        # Gráfico de barras de fantasmas
-                        st.subheader("Gráfico de Apariciones")
-                        st.bar_chart(df_summary.set_index('Categoría Espectral')['Cantidad'])
-
-                        # Mostrar tabla detallada bajo un expansor
-                        with st.expander("Ver Detalles de Detección (Debug)"):
-                            st.dataframe(df, use_container_width=True)
-                        
-                    
-            except Exception as e:
-                st.error(f"Error al procesar los resultados: {str(e)}")
-                st.stop()
 else:
-    st.error("No se pudo iniciar el espectrómetro. Por favor verifica las dependencias e inténtalo nuevamente.")
-    st.stop()
+    st.info("Apunta tu cámara a tu entorno y presiona 'Tomar foto' para comenzar la caza de fantasmas.")
+
 
 # Información adicional y pie de página
 st.markdown("---")
 st.caption("""
-**Acerca de la aplicación**: Esta interfaz utiliza el algoritmo YOLOv5 (You Only Look Once) para la detección de objetos, 
-simulando la captura de 'fantasmas tiernos' como parte de un proyecto de interfaces multimodales.
+**Acerca de la aplicación (Versión Simplificada)**: 
+Esta interfaz es un trabajo de Interfaces Multimodales. Utiliza Streamlit para la entrada de cámara y presenta una **simulación creativa de la detección de objetos (YOLO)** para ilustrar el concepto de Visión Artificial sin requerir librerías complejas como PyTorch o OpenCV.
 """)
